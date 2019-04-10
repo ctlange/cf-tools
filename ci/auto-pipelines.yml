@@ -1,0 +1,54 @@
+resource_types:
+- name: git-branches
+  type: docker-image
+  source:
+# https://github.com/vito/git-branches-resource
+    repository: vito/git-branches-resource
+
+resources:
+- name: branches
+  type: git-branches
+  source:
+    uri: ((git_uri))
+    username: ((git_username))
+    password: ((git_password))
+- name: cf-tools-repository
+  type: git
+  check_every: 60s
+  source:
+# source repository
+    uri: https://devstack.vwgroup.com/bitbucket/scm/fx/cf-tools.git
+    branch: master
+    username: ((git_username))
+    password: ((git_password))
+
+
+jobs:
+- name: auto-pipelines
+  public: false
+  plan:
+  - get: branches
+    trigger: true
+  - get: cf-tools-repository
+    trigger: true
+  - task: Create pipelines
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: ctlange/fly-cf-git, tag: latest}
+      inputs:
+      - name: branches
+      - name: cf-tools-repository
+      outputs:
+      - name: output
+      run:
+        path: "/bin/sh"
+        args: ["-c", "chmod -v 755 cf-tools-repository/ci/create-pipeline.sh;cf-tools-repository/ci/create-pipeline.sh"]
+      params:
+        PROJECTNAME: ((projectname))
+        GIT_USERNAME: ((git_username))
+        GIT_PASSWORD: ((git_password))
+        GIT_URI: ((git_uri))
+        FLY_USERNAME: ((fly_username))
+        FLY_PASSWORD: ((fly_password))

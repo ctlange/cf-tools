@@ -1,0 +1,71 @@
+resource_types:
+- name: cf-resource-sso
+  type: docker-image
+  source:
+    repository: ctlange/cf-resource-sso
+
+resources:
+- name: source-repository
+  type: git
+  check_every: 60s
+  source:
+# source repository
+    uri: https://devstack.vwgroup.com/bitbucket/scm/....git
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_password))
+- name: s3-artifact-copy
+  type: s3
+  source:
+    bucket: ((s3_bucket))
+    region_name: ((s3_regionname))
+# (.*) need for version detection, see https://github.com/concourse/s3-resource regexp/version
+# this regex contains also the destination directory
+    regexp: "jar/name-of-jar-file-(.*)(-SNAPSHOT)?\\.jar"
+    access_key_id: ((s3_accesskeyid))
+    secret_access_key: ((s3_secretaccesskey))
+- name: cf-deploy
+  type: cf-resource-sso
+  source:
+    api: https://api.sys.de.vwapps.io
+    organization: fx
+    space: fx-dev
+# see https://docs.apps.emea.vwapps.io/ug/services/ci-credentials/Readme/#create-service-key
+# cf service-key fx-dev-ci-credentials fx-dev-cf-credentials:
+    authorized_grant_type: ((cf_authorized_grant_type))
+    client_id: ((cf_client_id))
+    client_secret: ((cf_client_secret))
+    credentials_endpoint: ((cf_credentials_endpoint))
+    token_url: ((cf_token_url))
+
+
+jobs:
+- name: build
+  public: true
+  plan:
+  - get: source-repository
+    trigger: true
+  - task: Gradle-Wrapper
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: java, tag: openjdk-8}
+      inputs:
+      - name: source-repository
+      outputs:
+      - name: build-result
+      run:
+        path: "/bin/sh"
+        args: ["-c", "source-repository/gradlew --no-daemon --build-file source-repository/build.gradle -Partifactory_user=$artifactory_username -Partifactory_password=$artifactory_password build && cp -Rp source-repository/* build-result/"]
+      params:
+        artifactory_username: ((artifactory_username))
+        artifactory_password: ((artifactory_password))
+  - put: s3-artifact-copy
+    params:
+# result file to deploy
+      file: build-result/build/libs/name-of-jar-file-*.jar
+  - put: cf-deploy
+    params:
+      manifest: build-result/manifest-q.yml
+      debug: 1

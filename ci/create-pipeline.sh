@@ -1,0 +1,57 @@
+#!/bin/sh
+
+set -e
+
+#see https://blog.osones.com/en/multi-git-branches-workflow-with-concourse-ci.html
+#see https://github.com/vito/git-branches-resource
+
+export NEW_VERSIONS=$(cat branches/branches)
+export OLD_VERSIONS=$(cat branches/removed)
+
+FLY_CMD=fly3
+
+$FLY_CMD login -t ci -c https://ci.sys.de.vwapps.io -n fx -u $FLY_USERNAME -p $FLY_PASSWORD
+$FLY_CMD -t ci sync
+
+GIT_FULL_URI=${GIT_URI/https:\/\//https:\/\/$GIT_USERNAME:$GIT_PASSWORD@}
+
+echo git clone $GIT_FULL_URI source-repository
+git clone $GIT_FULL_URI source-repository
+
+for version in $NEW_VERSIONS; do
+  pipe_name=${version//\//-}
+  sed_branch=${version//\//\\\/}
+
+  cd source-repository
+  git reset --hard
+  git clean -fd
+  git checkout $version
+  cd ..
+
+  if [ -e source-repository/ci/pipeline.yml ]
+  then
+    mkdir -p source-repository/ci
+    echo "git_branch: $version" > source-repository/ci/params.yml
+    echo "git_uri: $GIT_URI" >> source-repository/ci/params.yml
+    echo "projectname: $PROJECTNAME" >> source-repository/ci/params.yml
+
+    OK=0
+    $FLY_CMD -t ci set-pipeline --pipeline $PROJECTNAME-$pipe_name --config source-repository/ci/pipeline.yml -l source-repository/ci/params.yml -n && OK=1
+
+    echo "Create pipeline branch $version / $PROJECTNAME-$pipe_name"
+    if [ "$OK" = "1" ]; then
+  	  echo "Unpause pipeline branch $version / $PROJECTNAME-$pipe_name"
+	  $FLY_CMD -t ci unpause-pipeline --pipeline $PROJECTNAME-$pipe_name
+    fi 
+
+#    $FLY_CMD -t ci destroy-pipeline --pipeline $PROJECTNAME-$pipe_name -n
+  else
+    echo no pipeline ignore
+  fi
+done
+
+for version in $OLD_VERSIONS; do
+  pipe_name=${version//\//-}
+  echo "Delete pipeline branch $version / $PROJECTNAME-$pipe_name"
+  $FLY_CMD -t ci destroy-pipeline --pipeline $PROJECTNAME-$pipe_name -n || true
+done
