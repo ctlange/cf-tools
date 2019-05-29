@@ -10,7 +10,7 @@ export OLD_VERSIONS=$(cat branches/removed)
 
 FLY_CMD=fly3
 
-$FLY_CMD login -t ci -c https://ci.sys.de.vwapps.io -n fx -u $FLY_USERNAME -p $FLY_PASSWORD
+$FLY_CMD login -t ci -c $FLY_CONCOURSE_URL -n $FLY_TEAM -u $FLY_USERNAME -p $FLY_PASSWORD
 $FLY_CMD -t ci sync
 
 GIT_FULL_URI=${GIT_URI/https:\/\//https:\/\/$GIT_USERNAME:$GIT_PASSWORD@}

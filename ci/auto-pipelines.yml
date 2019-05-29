@@ -52,3 +52,5 @@ jobs:
         GIT_URI: ((git_uri))
         FLY_USERNAME: ((fly_username))
         FLY_PASSWORD: ((fly_password))
+        FLY_TEAM: ((fly_team))
+        FLY_CONCOURSE_URL: ((fly_concourse_url))
