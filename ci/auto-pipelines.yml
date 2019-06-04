@@ -52,3 +52,59 @@ jobs:
         GIT_URI: ((git_uri))
         FLY_USERNAME: ((fly_username))
         FLY_PASSWORD: ((fly_password))
+        FLY_TEAM: ((fly_team))
+        FLY_CONCOURSE_URL: ((fly_concourse_url))
+- name: destroy-all-pipelines
+  public: false
+  plan:
+  - get: cf-tools-repository
+    trigger: false
+  - task: Destroy pipelines
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: ctlange/fly-cf-git, tag: latest}
+      inputs:
+      - name: cf-tools-repository
+      outputs:
+      - name: output
+      run:
+        path: "/bin/sh"
+        args: ["-c", "chmod -v 755 cf-tools-repository/ci/create-pipeline.sh;cf-tools-repository/ci/create-pipeline.sh destroy"]
+      params:
+        PROJECTNAME: ((projectname))
+        GIT_USERNAME: ((git_username))
+        GIT_PASSWORD: ((git_password))
+        GIT_URI: ((git_uri))
+        FLY_USERNAME: ((fly_username))
+        FLY_PASSWORD: ((fly_password))
+        FLY_TEAM: ((fly_team))
+        FLY_CONCOURSE_URL: ((fly_concourse_url))
+- name: create-all-pipelines
+  public: false
+  plan:
+  - get: cf-tools-repository
+    trigger: false
+  - task: Create pipelines
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: ctlange/fly-cf-git, tag: latest}
+      inputs:
+      - name: cf-tools-repository
+      outputs:
+      - name: output
+      run:
+        path: "/bin/sh"
+        args: ["-c", "chmod -v 755 cf-tools-repository/ci/create-pipeline.sh;cf-tools-repository/ci/create-pipeline.sh create"]
+      params:
+        PROJECTNAME: ((projectname))
+        GIT_USERNAME: ((git_username))
+        GIT_PASSWORD: ((git_password))
+        GIT_URI: ((git_uri))
+        FLY_USERNAME: ((fly_username))
+        FLY_PASSWORD: ((fly_password))
+        FLY_TEAM: ((fly_team))
+        FLY_CONCOURSE_URL: ((fly_concourse_url))
