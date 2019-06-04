@@ -20,7 +20,6 @@ git clone $GIT_FULL_URI source-repository
 
 for version in $NEW_VERSIONS; do
   pipe_name=${version//\//-}
-  sed_branch=${version//\//\\\/}
 
   cd source-repository
   git reset --hard
@@ -34,6 +33,7 @@ for version in $NEW_VERSIONS; do
     echo "git_branch: $version" > source-repository/ci/params.yml
     echo "git_uri: $GIT_URI" >> source-repository/ci/params.yml
     echo "projectname: $PROJECTNAME" >> source-repository/ci/params.yml
+    echo "pipe_name: $pipe_name" >> source-repository/ci/params.yml
 
     OK=0
     $FLY_CMD -t ci set-pipeline --pipeline $PROJECTNAME-$pipe_name --config source-repository/ci/pipeline.yml -l source-repository/ci/params.yml -n && OK=1
