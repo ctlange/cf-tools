@@ -54,6 +54,10 @@ jobs:
         FLY_PASSWORD: ((fly_password))
         FLY_TEAM: ((fly_team))
         FLY_CONCOURSE_URL: ((fly_concourse_url))
+        S3_BUCKET: ((s3_bucket))
+        S3_REGIONNAME: ((s3_regionname))
+        S3_ACCESSKEYID: ((s3_accesskeyid))
+        S3_SECRETACCESSKEY: ((s3_secretaccesskey))
 - name: destroy-all-pipelines
   public: false
   plan:
@@ -81,6 +85,10 @@ jobs:
         FLY_PASSWORD: ((fly_password))
         FLY_TEAM: ((fly_team))
         FLY_CONCOURSE_URL: ((fly_concourse_url))
+        S3_BUCKET: ((s3_bucket))
+        S3_REGIONNAME: ((s3_regionname))
+        S3_ACCESSKEYID: ((s3_accesskeyid))
+        S3_SECRETACCESSKEY: ((s3_secretaccesskey))
 - name: create-all-pipelines
   public: false
   plan:
@@ -108,3 +116,7 @@ jobs:
         FLY_PASSWORD: ((fly_password))
         FLY_TEAM: ((fly_team))
         FLY_CONCOURSE_URL: ((fly_concourse_url))
+        S3_BUCKET: ((s3_bucket))
+        S3_REGIONNAME: ((s3_regionname))
+        S3_ACCESSKEYID: ((s3_accesskeyid))
+        S3_SECRETACCESSKEY: ((s3_secretaccesskey))

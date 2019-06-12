@@ -24,13 +24,19 @@ then
 	cd ..
 fi
 
+aws configure set aws_access_key_id $S3_ACCESSKEYID
+aws configure set aws_secret_access_key $S3_SECRETACCESSKEY
+aws configure set region $S3_REGIONNAME
+
 if [ "$1" = "destroy" ]
 then
 	OLD_PIPELINES=$($FLY_CMD -t ci pipelines | grep $PROJECTNAME | grep -v $PROJECTNAME-auto-pipeline | sed -e 's/  *.*//g')
 	for pipe_name in $OLD_PIPELINES; do
 		echo "Delete pipeline $pipe_name"
 		$FLY_CMD -t ci destroy-pipeline --pipeline $pipe_name -n || true
+		aws s3 rm s3://$S3_BUCKET/build/$pipe_name.tar.bz2 || true
 	done
+	aws s3 ls s3://$S3_BUCKET --recursive
 	exit
 fi
 
@@ -81,4 +87,5 @@ for version in $OLD_VERSIONS; do
   pipe_name=${version//\//-}
   echo "Delete pipeline branch $version / $PROJECTNAME-$pipe_name"
   $FLY_CMD -t ci destroy-pipeline --pipeline $PROJECTNAME-$pipe_name -n || true
+  aws s3 rm s3://$S3_BUCKET/build/$PROJECTNAME-$pipe_name.tar.bz2 || true
 done
