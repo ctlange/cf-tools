@@ -57,6 +57,11 @@ for version in $NEW_VERSIONS; do
     echo "projectname: $PROJECTNAME" >> source-repository/ci/params.yml
     echo "pipe_name: $PROJECTNAME-$pipe_name" >> source-repository/ci/params.yml
 
+    if [ -e source-repository/ci/pipeline-params.yml ]
+    then
+      cat source-repository/ci/pipeline-params.yml >> source-repository/ci/params.yml
+    fi
+
     OK=0
     $FLY_CMD -t ci set-pipeline --pipeline $PROJECTNAME-$pipe_name --config source-repository/ci/pipeline.yml -l source-repository/ci/params.yml -n && OK=1
 
