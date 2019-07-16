@@ -44,6 +44,27 @@ if [ "$1" = "" ]
 then
 	export NEW_VERSIONS=$(cat branches/branches)
 	export OLD_VERSIONS=$(cat branches/removed)
+	FOUND_MASTER=0
+
+	for version in $NEW_VERSIONS; do
+		if [ "$version" = "master" ]
+		then
+			FOUND_MASTER=1
+		fi
+	done
+
+	for version in $OLD_VERSIONS; do
+		if [ "$version" = "master" ]
+		then
+			FOUND_MASTER=0
+		fi
+	done
+
+	if [ "$FOUND_MASTER" = "0" ]
+	then
+		echo never delete master branch
+		exit 1
+	fi
 fi
 
 for version in $NEW_VERSIONS; do
