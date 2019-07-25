@@ -89,6 +89,13 @@ for version in $NEW_VERSIONS; do
       cat source-repository/ci/pipeline-params.yml >> source-repository/ci/params.yml
     fi
 
+    if [ -e source-repository/ci/pipeline-params-$PROJECTNAME-$pipe_name.yml ]
+    then
+      echo found extra parameter for pipeline $PROJECTNAME-$pipe_name
+      echo >> source-repository/ci/params.yml
+      cat source-repository/ci/pipeline-params-$PROJECTNAME-$pipe_name.yml >> source-repository/ci/params.yml
+    fi
+
     OK=0
     $FLY_CMD -t ci set-pipeline --pipeline $PROJECTNAME-$pipe_name --config source-repository/ci/pipeline.yml -l source-repository/ci/params.yml -n && OK=1
 
